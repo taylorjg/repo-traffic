@@ -11,8 +11,10 @@ const config = GITHUB_API_TOKEN ? {
   }
 } : undefined;
 
-axios.get(reposUrl, config)
-  .then(response => {
-    // console.log(response);
-    console.log(`x-ratelimit-remaining: ${response.headers['x-ratelimit-remaining']}`);
-  });
+const wrapper = async () => {
+  const response = await axios.get(reposUrl, config);
+  // console.log(response);
+  console.log(`x-ratelimit-remaining: ${response.headers['x-ratelimit-remaining']}`);
+};
+
+wrapper();
