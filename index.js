@@ -13,12 +13,12 @@ if (program.token) {
   axios.defaults.headers.common["Authorization"] = `token ${program.token}`;
 }
 
-axios.interceptors.response.use(response => {
-  const request = response.request;
-  const message = `x-ratelimit-remaining: ${response.headers['x-ratelimit-remaining']}`;
-  console.log(`[${request.method} ${request.path}] ${message}`);
-  return response;
-});
+// axios.interceptors.response.use(response => {
+//   const request = response.request;
+//   const message = `x-ratelimit-remaining: ${response.headers['x-ratelimit-remaining']}`;
+//   console.log(`[${request.method} ${request.path}] ${message}`);
+//   return response;
+// });
 
 const parseLinkHeader = response => {
   const linkHeader = response.headers["link"];
@@ -80,7 +80,24 @@ const wrapper = async () => {
       }
     };
     const data = flatten(await getPages(url, config));
-    data.forEach((repo, index) => console.log(`[${index}] html_url: ${repo.html_url}`));
+    // data.forEach((repo, index) => console.log(`[${index}] html_url: ${repo.html_url}`));
+
+    // https://developer.github.com/v3/repos/traffic/
+    // GET /repos/:owner/:repo/traffic/popular/referrers
+    // GET /repos/:owner/:repo/traffic/popular/paths
+
+    data.forEach(async repo => {
+      const viewsResponse = await axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/views`);
+      const views = viewsResponse.data;
+      if (views.count > 0) {
+        console.log(`[${repo.name}] views.count: ${views.count}; views.uniques: ${views.uniques}`);
+      }
+      const clonesResponse = await axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/clones`);
+      const clones = clonesResponse.data;
+      if (clones.count > 0) {
+        console.log(`[${repo.name}] clones.count: ${clones.count}; clones.uniques: ${clones.uniques}`);
+      }
+    });
   }
   catch (err) {
     handleError(err);
