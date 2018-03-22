@@ -1,8 +1,5 @@
 import axios from "axios";
-
-// TODO: how to use import rather than require ?
-// import * as program from "commander";
-const program = require("commander");
+import program from "commander";
 
 program
   .option("-t, --token <token>", "GitHub API token")
