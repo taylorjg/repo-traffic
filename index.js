@@ -9,20 +9,16 @@ program
   .option("-u, --username <username>", "User whose repos should be displayed", "taylorjg")
   .parse(process.argv);
 
-const GITHUBAPI_BASE_URL = "https://api.github.com";
-const USERNAME = program.username;
+const reposUrl = `users/${program.username}/repos`;
 
-const reposUrl = `${GITHUBAPI_BASE_URL}/users/${USERNAME}/repos`;
-
-// TODO: make this the default config for axios so we don't
-//       have to specify it explicitly with each call ?
-const DEFAULT_CONFIG = program.token
-  ? {
-    headers: {
+const myaxios = axios.create({
+  baseURL: "https://api.github.com",
+  headers: program.token
+    ? {
       "Authorization": `token ${program.token}`
     }
-  }
-  : {};
+    : {}
+});
 
 const parseLinkHeader = response => {
   const linkHeader = response.headers["link"];
@@ -46,8 +42,12 @@ const parseLinkHeader = response => {
 // - but not specific to any particular operation
 
 const wrapper = async () => {
-  const config = Object.assign({ params: { "per_page": 5 } }, DEFAULT_CONFIG);
-  const response = await axios.get(reposUrl, config);
+  const config = {
+    params: {
+      "per_page": 5
+    }
+  };
+  const response = await myaxios.get(reposUrl, config);
   console.log(response.data.map(x => x.html_url));
   const rels = parseLinkHeader(response);
   console.log(`rels:\n${JSON.stringify(rels, null, 2)}`);
