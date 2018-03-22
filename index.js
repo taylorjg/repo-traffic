@@ -1,17 +1,27 @@
 import axios from "axios";
 
+// TODO: how to use import rather than require ?
+// import * as program from "commander";
+const program = require("commander");
+
+import packageJson from "./package.json";
+
+program
+  .version(packageJson.version, "-v, --version")
+  .option("-t, --token [token]", "GitHub API token")
+  .option("-u, --username [username]", "User whose repos should be displayed [taylorjg]", "taylorjg")
+  .parse(process.argv);
+
 const GITHUBAPI_BASE_URL = "https://api.github.com";
-
-// TODO: use something like 'commander' to get this from the command line
-const GITHUB_API_TOKEN = process.argv[2];
-
-// TODO: use something like 'commander' to get this from the command line
-const USERNAME = "taylorjg";
+const USERNAME = program.username;
 
 const reposUrl = `${GITHUBAPI_BASE_URL}/users/${USERNAME}/repos?per_page=100`;
-const config = GITHUB_API_TOKEN ? {
+
+// TODO: make this the default config for axios so we don't
+//       have to specify it explicitly with each call ?
+const config = program.token ? {
   headers: {
-    "Authorization": `token ${GITHUB_API_TOKEN}`
+    "Authorization": `token ${program.token}`
   }
 } : undefined;
 
@@ -41,7 +51,7 @@ const wrapper = async () => {
   console.log(response.data.map(x => x.html_url));
   const rels = parseLinkHeader(response);
   console.log(`rels:\n${JSON.stringify(rels, null, 2)}`);
-  // console.log(`x-ratelimit-remaining: ${response.headers['x-ratelimit-remaining']}`);
+  console.log(`x-ratelimit-remaining: ${response.headers['x-ratelimit-remaining']}`);
 };
 
 wrapper();
