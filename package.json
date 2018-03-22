@@ -1,0 +1,22 @@
+{
+  "name": "top-repos",
+  "version": "0.0.0",
+  "description": "Display stats re GitHub repos",
+  "dependencies": {
+    "axios": "^0.17.1",
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-plugin-transform-runtime": "^6.23.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-register": "^6.26.0",
+    "eslint": "^4.16.0"
+  },
+  "scripts": {
+    "start": "node -r babel-register index"
+  },
+  "author": "Jonathan Taylor",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "TODO"
+  }
+}
