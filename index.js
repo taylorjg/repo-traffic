@@ -72,6 +72,8 @@ const handleError = err => {
   console.log(`${SEPARATOR_LINE}  END ERROR  ${SEPARATOR_LINE}`);
 };
 
+const flatten = xs => [].concat(...xs);
+
 const wrapper = async () => {
   try {
     const url = `/users/${program.username}/repos`;
@@ -80,8 +82,7 @@ const wrapper = async () => {
         "per_page": program.pageSize
       }
     };
-    const pages = await getPages(url, config);
-    const data = [].concat(...pages);
+    const data = flatten(await getPages(url, config));
     data.forEach((repo, index) => console.log(`[${index}] html_url: ${repo.html_url}`));
   }
   catch (err) {
