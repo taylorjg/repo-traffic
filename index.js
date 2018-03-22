@@ -7,7 +7,6 @@ const program = require("commander");
 program
   .option("-t, --token <token>", "GitHub API token")
   .option("-u, --username <username>", "User whose repos should be displayed", "taylorjg")
-  .option("-p, --page-size <n>", "Page size", parseInt, 10)
   .parse(process.argv);
 
 const myaxios = axios.create({
@@ -40,19 +39,34 @@ const parseLinkHeader = response => {
 // e.g. fetch all repos
 // - but not specific to any particular operation
 
+const getAllPages = async (url, config) => {
+  console.log(`fetching ${url}...`);
+  const response = await myaxios.get(url, config);
+  const rels = parseLinkHeader(response);
+  const next = rels.find(rel => rel.rel === "next");
+  if (next) {
+    return [response.data, ...await getAllPages(next.href, config)];
+  }
+  else {
+    return [response.data];
+  }
+};
+
 const wrapper = async () => {
   try {
     const url = `/users/${program.username}/repos`;
     const config = {
       params: {
-        "per_page": program.pageSize
+        "per_page": 25
       }
     };
-    const response = await myaxios.get(url, config);
-    console.log(response.data.map(x => x.html_url));
-    const rels = parseLinkHeader(response);
-    console.log(`rels:\n${JSON.stringify(rels, null, 2)}`);
-    console.log(`x-ratelimit-remaining: ${response.headers['x-ratelimit-remaining']}`);
+    // const response = await myaxios.get(url, config);
+    // console.log(response.data.map(x => x.html_url));
+    // const rels = parseLinkHeader(response);
+    // console.log(`rels:\n${JSON.stringify(rels, null, 2)}`);
+    // console.log(`x-ratelimit-remaining: ${response.headers['x-ratelimit-remaining']}`);
+    const pages = await getAllPages(url, config);
+    console.log(`pages.length: ${pages.length}`);
   }
   catch (err) {
     const SEPARATOR_LINE = "-".repeat(30);
