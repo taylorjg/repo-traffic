@@ -7,9 +7,8 @@ const program = require("commander");
 program
   .option("-t, --token <token>", "GitHub API token")
   .option("-u, --username <username>", "User whose repos should be displayed", "taylorjg")
+  .option("-p, --page-size <n>", "Page size", parseInt, 10)
   .parse(process.argv);
-
-const reposUrl = `users/${program.username}/repos`;
 
 const myaxios = axios.create({
   baseURL: "https://api.github.com",
@@ -42,12 +41,13 @@ const parseLinkHeader = response => {
 // - but not specific to any particular operation
 
 const wrapper = async () => {
+  const url = `/users/${program.username}/repos`;
   const config = {
     params: {
-      "per_page": 5
+      "per_page": program.pageSize
     }
   };
-  const response = await myaxios.get(reposUrl, config);
+  const response = await myaxios.get(url, config);
   console.log(response.data.map(x => x.html_url));
   const rels = parseLinkHeader(response);
   console.log(`rels:\n${JSON.stringify(rels, null, 2)}`);
