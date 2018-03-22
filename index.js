@@ -41,19 +41,38 @@ const parseLinkHeader = response => {
 // - but not specific to any particular operation
 
 const wrapper = async () => {
-  const url = `/users/${program.username}/repos`;
-  const config = {
-    params: {
-      "per_page": program.pageSize
+  try {
+    const url = `/users/${program.username}/repos`;
+    const config = {
+      params: {
+        "per_page": program.pageSize
+      }
+    };
+    const response = await myaxios.get(url, config);
+    console.log(response.data.map(x => x.html_url));
+    const rels = parseLinkHeader(response);
+    console.log(`rels:\n${JSON.stringify(rels, null, 2)}`);
+    console.log(`x-ratelimit-remaining: ${response.headers['x-ratelimit-remaining']}`);
+  }
+  catch (err) {
+    const SEPARATOR_LINE = "-".repeat(30);
+    console.log(`${SEPARATOR_LINE} START ERROR ${SEPARATOR_LINE}`);
+    if (err.response) {
+      const response = err.response;
+      const request = response.request;
+      const status = response.status;
+      const statusText = response.statusText;
+      const message = `status: ${status}; statusText: ${statusText}`;
+      console.log(`[${request.method} ${request.path}] ${message}`);
+      }
+    else {
+      if (err.config) {
+        console.log(`method: ${err.config.method}; path: ${err.config.url}`);
+      }
+      console.log(`${err}`);
     }
-  };
-  const response = await myaxios.get(url, config);
-  console.log(response.data.map(x => x.html_url));
-  const rels = parseLinkHeader(response);
-  console.log(`rels:\n${JSON.stringify(rels, null, 2)}`);
-  console.log(`x-ratelimit-remaining: ${response.headers['x-ratelimit-remaining']}`);
-
-  // TODO: add error handling - try/catch
+    console.log(`${SEPARATOR_LINE}  END ERROR  ${SEPARATOR_LINE}`);
+  }
 };
 
 wrapper();
