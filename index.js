@@ -80,24 +80,28 @@ const wrapper = async () => {
       }
     };
     const data = flatten(await getPages(url, config));
-    // data.forEach((repo, index) => console.log(`[${index}] html_url: ${repo.html_url}`));
 
-    // https://developer.github.com/v3/repos/traffic/
-    // GET /repos/:owner/:repo/traffic/popular/referrers
-    // GET /repos/:owner/:repo/traffic/popular/paths
+    const REPO_NAME_COL_WIDTH = 30;
+    const VIEW_COUNT_COL_WIDTH = 5;
 
     data.forEach(async repo => {
       const viewsResponse = await axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/views`);
       const views = viewsResponse.data;
       if (views.count > 0) {
-        console.log(`[${repo.name}] views.count: ${views.count}; views.uniques: ${views.uniques}`);
+        console.log(`${repo.name.padEnd(REPO_NAME_COL_WIDTH)} views:  ${String(views.count).padStart(VIEW_COUNT_COL_WIDTH)}     unique: ${String(views.uniques).padStart(VIEW_COUNT_COL_WIDTH)}`);
       }
       const clonesResponse = await axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/clones`);
       const clones = clonesResponse.data;
       if (clones.count > 0) {
-        console.log(`[${repo.name}] clones.count: ${clones.count}; clones.uniques: ${clones.uniques}`);
+        console.log(`${repo.name.padEnd(REPO_NAME_COL_WIDTH)} clones: ${String(clones.count).padStart(VIEW_COUNT_COL_WIDTH)}     unique: ${String(clones.uniques).padStart(VIEW_COUNT_COL_WIDTH)}`);
       }
     });
+
+    const rateLimitResponse = await axios.get("/rate_limit");
+    const rateLimitData = rateLimitResponse.data;
+    console.log(`rate limit: ${rateLimitData.resources.core.limit}`);
+    console.log(`rate remaining: ${rateLimitData.resources.core.remaining}`);
+    console.log(`rate reset: ${new Date(rateLimitData.resources.core.reset * 1000)}`);
   }
   catch (err) {
     handleError(err);
