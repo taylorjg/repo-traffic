@@ -7,8 +7,10 @@ const program = require("commander");
 program
   .option("-t, --token <token>", "GitHub API token")
   .option("-u, --username <username>", "User whose repos should be displayed", "taylorjg")
+  .option("-p, --page-size <n>", "Page size", Number, 100)
   .parse(process.argv);
 
+// TODO: add some sort of interceptor to show URL + remaining rate limit per request
 const myaxios = axios.create({
   baseURL: "https://api.github.com",
   headers: program.token
@@ -35,17 +37,12 @@ const parseLinkHeader = response => {
     });
 };
 
-// TODO: create a generic mechanism to fetch all pages of information
-// e.g. fetch all repos
-// - but not specific to any particular operation
-
-const getAllPages = async (url, config) => {
-  console.log(`fetching ${url}...`);
+const getPages = async (url, config) => {
   const response = await myaxios.get(url, config);
   const rels = parseLinkHeader(response);
   const next = rels.find(rel => rel.rel === "next");
   if (next) {
-    return [response.data, ...await getAllPages(next.href, config)];
+    return [response.data, ...await getPages(next.href, config)];
   }
   else {
     return [response.data];
@@ -57,16 +54,12 @@ const wrapper = async () => {
     const url = `/users/${program.username}/repos`;
     const config = {
       params: {
-        "per_page": 25
+        "per_page": program.pageSize
       }
     };
-    // const response = await myaxios.get(url, config);
-    // console.log(response.data.map(x => x.html_url));
-    // const rels = parseLinkHeader(response);
-    // console.log(`rels:\n${JSON.stringify(rels, null, 2)}`);
-    // console.log(`x-ratelimit-remaining: ${response.headers['x-ratelimit-remaining']}`);
-    const pages = await getAllPages(url, config);
-    console.log(`pages.length: ${pages.length}`);
+    const pages = await getPages(url, config);
+    const data = [].concat(...pages);
+    data.forEach((repo, index) => console.log(`[${index}] html_url: ${repo.html_url}`));
   }
   catch (err) {
     const SEPARATOR_LINE = "-".repeat(30);
