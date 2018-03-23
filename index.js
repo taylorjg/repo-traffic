@@ -85,9 +85,9 @@ const wrapper = async () => {
     const VIEW_COUNT_COL_WIDTH = 5;
 
     data.forEach(async repo => {
-      const viewsResponseP = axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/views`);
-      const clonesResponseP = axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/clones`);
-      axios.all([viewsResponseP, clonesResponseP])
+      const viewsPromise = axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/views`);
+      const clonesPromise = axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/clones`);
+      axios.all([viewsPromise, clonesPromise])
         .then(axios.spread(({ data: views }, { data: clones }) => {
           if (views.count > 0 || clones.count > 0) {
             const repoName = repo.name.padEnd(REPO_NAME_COL_WIDTH);
@@ -95,7 +95,9 @@ const wrapper = async () => {
             const viewsUniques = String(views.uniques).padStart(VIEW_COUNT_COL_WIDTH);
             const clonesCount = String(clones.count).padStart(VIEW_COUNT_COL_WIDTH);
             const clonesUniques = String(clones.uniques).padStart(VIEW_COUNT_COL_WIDTH);
-            console.log(`${repoName}     views: ${viewsCount} / ${viewsUniques}     clones: ${clonesCount} / ${clonesUniques}`);
+            const viewsNumbers = `views: ${viewsCount} / ${viewsUniques}`;
+            const clonesNumbers = `clones: ${clonesCount} / ${clonesUniques}`;
+            console.log(`${repoName}     ${viewsNumbers}     ${clonesNumbers}`);
           }
         }));
     });
