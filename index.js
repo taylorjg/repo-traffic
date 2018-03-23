@@ -85,16 +85,19 @@ const wrapper = async () => {
     const VIEW_COUNT_COL_WIDTH = 5;
 
     data.forEach(async repo => {
-      const viewsResponse = await axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/views`);
-      const views = viewsResponse.data;
-      if (views.count > 0) {
-        console.log(`${repo.name.padEnd(REPO_NAME_COL_WIDTH)} views:  ${String(views.count).padStart(VIEW_COUNT_COL_WIDTH)}     unique: ${String(views.uniques).padStart(VIEW_COUNT_COL_WIDTH)}`);
-      }
-      const clonesResponse = await axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/clones`);
-      const clones = clonesResponse.data;
-      if (clones.count > 0) {
-        console.log(`${repo.name.padEnd(REPO_NAME_COL_WIDTH)} clones: ${String(clones.count).padStart(VIEW_COUNT_COL_WIDTH)}     unique: ${String(clones.uniques).padStart(VIEW_COUNT_COL_WIDTH)}`);
-      }
+      const viewsResponseP = axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/views`);
+      const clonesResponseP = axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/clones`);
+      axios.all([viewsResponseP, clonesResponseP])
+        .then(axios.spread(({ data: views }, { data: clones }) => {
+          if (views.count > 0 || clones.count > 0) {
+            const repoName = repo.name.padEnd(REPO_NAME_COL_WIDTH);
+            const viewsCount = String(views.count).padStart(VIEW_COUNT_COL_WIDTH);
+            const viewsUniques = String(views.uniques).padStart(VIEW_COUNT_COL_WIDTH);
+            const clonesCount = String(clones.count).padStart(VIEW_COUNT_COL_WIDTH);
+            const clonesUniques = String(clones.uniques).padStart(VIEW_COUNT_COL_WIDTH);
+            console.log(`${repoName}     views: ${viewsCount} / ${viewsUniques}     clones: ${clonesCount} / ${clonesUniques}`);
+          }
+        }));
     });
 
     const rateLimitResponse = await axios.get("/rate_limit");
