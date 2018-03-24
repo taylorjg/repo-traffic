@@ -5,6 +5,7 @@ program
   .option("-t, --token <token>", "GitHub API token")
   .option("-u, --username <username>", "User whose repos should be displayed", "taylorjg")
   .option("-p, --page-size <n>", "Page size", Number, 100)
+  .option("-d, --delay <n>", "Delay", Number, 100)
   .parse(process.argv);
 
 axios.defaults.baseURL = "https://api.github.com";
@@ -49,68 +50,118 @@ const getPages = async (url, config) => {
   }
 };
 
+const displayRateLimitData = async () => {
+  const rateLimitResponse = await axios.get("/rate_limit");
+  const rateLimitData = rateLimitResponse.data;
+  console.log(`rate limit: ${rateLimitData.resources.core.limit}`);
+  console.log(`rate remaining: ${rateLimitData.resources.core.remaining}`);
+  console.log(`rate reset: ${new Date(rateLimitData.resources.core.reset * 1000)}`);
+};
+
 const handleError = err => {
-  const SEPARATOR_LINE = "-".repeat(30);
-  console.log(`${SEPARATOR_LINE} START ERROR ${SEPARATOR_LINE}`);
   if (err.response) {
     const response = err.response;
     const request = response.request;
     const status = response.status;
     const statusText = response.statusText;
-    const message = `status: ${status}; statusText: ${statusText}`;
-    console.log(`[${request.method} ${request.path}] ${message}`);
+    if (response.data && response.data.message) {
+      console.log(`[${request.method} ${request.path}] status: ${status}; statusText: ${statusText}; message: ${response.data.message}`);
+    }
+    else {
+      console.log(`[${request.method} ${request.path}] status: ${status}; statusText: ${statusText}; err: ${err}`);
+    }
   }
   else {
     if (err.config) {
-      console.log(`method: ${err.config.method}; path: ${err.config.url}`);
+      console.log(`[${err.config.method} ${err.config.url}] err: ${err}`);
     }
-    console.log(`${err}`);
+    else {
+      console.log(`err: ${err}`);
+    }
   }
-  console.log(`${SEPARATOR_LINE}  END ERROR  ${SEPARATOR_LINE}`);
 };
 
 const flatten = xs => [].concat(...xs);
 
-const wrapper = async () => {
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
+const asyncWrapper = async () => {
   try {
+    await displayRateLimitData();
+
     const url = `/users/${program.username}/repos`;
     const config = {
       params: {
         "per_page": program.pageSize
       }
     };
-    const data = flatten(await getPages(url, config));
+    const repos = flatten(await getPages(url, config));
+
+    process.stdout.write(`${"-".repeat(repos.length)}\n`);
+
+    const results = [];
+    let indent = 0;
+    for (let index = 0; index < repos.length; index++) {
+      try {
+        const repo = repos[index];
+        const viewsPromise = axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/views`);
+        const clonesPromise = axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/clones`);
+        const [{ data: views }, { data: clones }] = await Promise.all([viewsPromise, clonesPromise]);
+
+        // Add a deliberate delay to try to avoid abuse detection which can cause 403 errors.
+        // https://developer.github.com/v3/guides/best-practices-for-integrators/#dealing-with-abuse-rate-limits
+        await delay(program.delay);
+
+        const result = {
+          repo,
+          views,
+          clones
+        };
+
+        results.push(result);
+
+        process.stdout.write(".");
+        indent++;
+      }
+      catch (err) {
+        indent && process.stdout.write("\n");
+        indent = 0;
+        handleError(err);
+      }
+    }
+
+    process.stdout.write("\n");
+
+    const compareResults = (a, b) => {
+      const compareViewsCount = b.views.count - a.views.count;
+      const compareClonesCount = b.clones.count - a.clones.count;
+      return compareViewsCount ? compareViewsCount : compareClonesCount;
+    };
+
+    const filteredSortedResults = results
+      .filter(result => result.views.count || result.clones.count)
+      .sort(compareResults);
 
     const REPO_NAME_COL_WIDTH = 30;
-    const VIEW_COUNT_COL_WIDTH = 5;
+    const COUNT_COL_WIDTH = 5;
 
-    data.forEach(async repo => {
-      const viewsPromise = axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/views`);
-      const clonesPromise = axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/clones`);
-      axios.all([viewsPromise, clonesPromise])
-        .then(axios.spread(({ data: views }, { data: clones }) => {
-          if (views.count > 0 || clones.count > 0) {
-            const repoName = repo.name.padEnd(REPO_NAME_COL_WIDTH);
-            const viewsCount = String(views.count).padStart(VIEW_COUNT_COL_WIDTH);
-            const viewsUniques = String(views.uniques).padStart(VIEW_COUNT_COL_WIDTH);
-            const clonesCount = String(clones.count).padStart(VIEW_COUNT_COL_WIDTH);
-            const clonesUniques = String(clones.uniques).padStart(VIEW_COUNT_COL_WIDTH);
-            const viewsNumbers = `views: ${viewsCount} / ${viewsUniques}`;
-            const clonesNumbers = `clones: ${clonesCount} / ${clonesUniques}`;
-            console.log(`${repoName}     ${viewsNumbers}     ${clonesNumbers}`);
-          }
-        }));
+    filteredSortedResults.forEach(result => {
+      const repoName = result.repo.name.padEnd(REPO_NAME_COL_WIDTH);
+      const viewsCount = String(result.views.count).padStart(COUNT_COL_WIDTH);
+      const viewsUniques = String(result.views.uniques).padStart(COUNT_COL_WIDTH);
+      const clonesCount = String(result.clones.count).padStart(COUNT_COL_WIDTH);
+      const clonesUniques = String(result.clones.uniques).padStart(COUNT_COL_WIDTH);
+      const viewsNumbers = `views: ${viewsCount} / ${viewsUniques}`;
+      const clonesNumbers = `clones: ${clonesCount} / ${clonesUniques}`;
+      const stars = `stars: ${result.repo.stargazers_count}`;
+      console.log(`${repoName}     ${viewsNumbers}     ${clonesNumbers}     ${stars}`);
     });
 
-    const rateLimitResponse = await axios.get("/rate_limit");
-    const rateLimitData = rateLimitResponse.data;
-    console.log(`rate limit: ${rateLimitData.resources.core.limit}`);
-    console.log(`rate remaining: ${rateLimitData.resources.core.remaining}`);
-    console.log(`rate reset: ${new Date(rateLimitData.resources.core.reset * 1000)}`);
+    await displayRateLimitData();
   }
   catch (err) {
     handleError(err);
   }
 };
 
-wrapper();
+asyncWrapper();
