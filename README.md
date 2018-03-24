@@ -1,5 +1,11 @@
 # Description
 
+A little Node.js program to fetch and display GitHub repo traffic data using
+[GitHub API v3](https://developer.github.com/v3/).
+
+To use it, create a [personal access token](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)
+and pass it in via the `-t` option.
+
 # Build
 
 ```

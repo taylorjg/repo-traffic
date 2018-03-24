@@ -9,6 +9,7 @@ program
   .parse(process.argv);
 
 axios.defaults.baseURL = "https://api.github.com";
+axios.defaults.headers.common["Accept"] = "application/vnd.github.v3+json";
 
 if (program.token) {
   axios.defaults.headers.common["Authorization"] = `token ${program.token}`;
