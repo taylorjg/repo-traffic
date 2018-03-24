@@ -1,7 +1,7 @@
 {
-  "name": "top-repos",
-  "version": "0.0.0",
-  "description": "Display stats re GitHub repos",
+  "name": "repo-traffic",
+  "version": "0.0.1",
+  "description": "Fetch and display GitHub repo traffic data",
   "dependencies": {
     "axios": "^0.17.1",
     "babel-cli": "^6.26.0",
@@ -20,6 +20,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "TODO"
+    "url": "https://github.com/taylorjg/repo-traffic.git"
   }
 }
