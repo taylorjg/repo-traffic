@@ -5,7 +5,7 @@
 ```
 $ npm run build
 
-> top-repos@0.0.0 build /Users/jontaylor/HomeProjects/repo-traffic
+> repo-traffic@0.0.1 build /Users/jontaylor/HomeProjects/repo-traffic
 > babel index.js --out-dir dist
 
 index.js -> dist/index.js
