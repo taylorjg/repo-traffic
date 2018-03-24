@@ -1,11 +1,17 @@
 # Description
 
 A little Node.js program to fetch and display GitHub repo traffic data using
-[GitHub API v3](https://developer.github.com/v3/) - in particular,
+[GitHub REST API v3](https://developer.github.com/v3/) - in particular,
 [Traffic](https://developer.github.com/v3/repos/traffic/).
 
 To use it, create a [personal access token](https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/)
 and pass it in via the `-t` option.
+
+# The Future
+
+I took a look at [GitHub GraphQL API v4](https://developer.github.com/v4/guides/intro-to-graphql/).
+Unfortunately, it doesn't appear to support traffic data yet. If this is added in the future,
+this will be a much better (faster!) way to achieve the same goal.
 
 # Build
 
