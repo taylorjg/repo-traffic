@@ -5,7 +5,7 @@ program
   .option("-t, --token <token>", "GitHub API token")
   .option("-u, --username <username>", "User whose repos should be displayed", "taylorjg")
   .option("-p, --page-size <n>", "Page size", Number, 100)
-  .option("-d, --delay <n>", "Delay", Number, 100)
+  .option("-d, --delay <n>", "Delay", Number, 0)
   .parse(process.argv);
 
 axios.defaults.baseURL = "https://api.github.com";
@@ -13,13 +13,6 @@ axios.defaults.baseURL = "https://api.github.com";
 if (program.token) {
   axios.defaults.headers.common["Authorization"] = `token ${program.token}`;
 }
-
-// axios.interceptors.response.use(response => {
-//   const request = response.request;
-//   const message = `x-ratelimit-remaining: ${response.headers['x-ratelimit-remaining']}`;
-//   console.log(`[${request.method} ${request.path}] ${message}`);
-//   return response;
-// });
 
 const parseLinkHeader = response => {
   const linkHeader = response.headers["link"];
@@ -110,7 +103,7 @@ const asyncWrapper = async () => {
 
         // Add a deliberate delay to try to avoid abuse detection which can cause 403 errors.
         // https://developer.github.com/v3/guides/best-practices-for-integrators/#dealing-with-abuse-rate-limits
-        await delay(program.delay);
+        program.delay && await delay(program.delay);
 
         const result = {
           repo,
