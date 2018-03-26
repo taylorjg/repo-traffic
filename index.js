@@ -5,7 +5,6 @@ program
   .option("-t, --token <token>", "GitHub API token")
   .option("-u, --username <username>", "User whose repos should be displayed", "taylorjg")
   .option("-p, --page-size <n>", "Page size", Number, 100)
-  .option("-d, --delay <n>", "Delay", Number, 0)
   .parse(process.argv);
 
 axios.defaults.baseURL = "https://api.github.com";
@@ -22,12 +21,10 @@ const parseLinkHeader = response => {
   }
   return linkHeader
     .split(",")
-    .map(link => link.split(";").map(bit => bit.trim()))
-    .map(bits => {
-      const bit0 = bits[0];
-      const bit1 = bits[1];
-      const href = /^<(.*)>$/.exec(bit0)[1];
-      const rel = /^rel="(.*)"$/.exec(bit1)[1];
+    .map(link => link.split(";").map(s => s.trim()))
+    .map(([hrefPart, relPart]) => {
+      const href = /^<([^>]+)>$/.exec(hrefPart)[1];
+      const rel = /^rel="([^"]+)"$/.exec(relPart)[1];
       return { href, rel };
     });
 };
@@ -77,8 +74,6 @@ const handleError = err => {
 
 const flatten = xs => [].concat(...xs);
 
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-
 const asyncWrapper = async () => {
   try {
     await displayRateLimitData();
@@ -101,10 +96,6 @@ const asyncWrapper = async () => {
         const viewsPromise = axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/views`);
         const clonesPromise = axios.get(`/repos/${repo.owner.login}/${repo.name}/traffic/clones`);
         const [{ data: views }, { data: clones }] = await Promise.all([viewsPromise, clonesPromise]);
-
-        // Add a deliberate delay to try to avoid abuse detection which can cause 403 errors.
-        // https://developer.github.com/v3/guides/best-practices-for-integrators/#dealing-with-abuse-rate-limits
-        program.delay && await delay(program.delay);
 
         const result = {
           repo,

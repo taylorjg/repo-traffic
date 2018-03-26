@@ -1,7 +1,7 @@
 {
   "name": "repo-traffic",
   "version": "0.0.1",
-  "description": "Fetch and display GitHub repo traffic data",
+  "description": "Fetch and display GitHub repo traffic data using the GitHub REST API v3",
   "dependencies": {
     "axios": "^0.17.1",
     "babel-cli": "^6.26.0",
