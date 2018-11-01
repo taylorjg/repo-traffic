@@ -1,5 +1,5 @@
-import axios from "axios";
-import program from "commander";
+const axios = require("axios");
+const program = require("commander");
 
 program
   .option("-t, --token <token>", "GitHub personal access token")
@@ -137,7 +137,7 @@ const asyncWrapper = async () => {
       .filter(result => result.views.count || result.clones.count)
       .sort(compareResults);
 
-    const REPO_NAME_COL_WIDTH = 30;
+    const REPO_NAME_COL_WIDTH = 40;
     const COUNT_COL_WIDTH = 5;
 
     filteredSortedResults.forEach(result => {
@@ -157,8 +157,7 @@ const asyncWrapper = async () => {
     console.log(`Total unique views: ${sumBy(filteredSortedResults, r => r.views.uniques)}`);
     console.log(`Total clones: ${sumBy(filteredSortedResults, r => r.clones.count)}`);
     console.log(`Total unique clones: ${sumBy(filteredSortedResults, r => r.clones.uniques)}`);
-    console.log(`Total stars (filtered): ${sumBy(filteredSortedResults, r => r.repo.stargazers_count)}`);
-    console.log(`Total stars (unfiltered): ${sumBy(results, r => r.repo.stargazers_count)}`);
+    console.log(`Total stars: ${sumBy(results, r => r.repo.stargazers_count)}`);
     console.log();
 
     if (program.showRateLimit) {

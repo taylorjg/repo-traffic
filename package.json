@@ -4,17 +4,8 @@
   "description": "Fetch and display GitHub repo traffic data using the GitHub REST API v3",
   "dependencies": {
     "axios": "^0.17.1",
-    "babel-cli": "^6.26.0",
-    "babel-plugin-transform-async-to-generator": "^6.24.1",
-    "babel-plugin-transform-runtime": "^6.23.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-register": "^6.26.0",
     "commander": "^2.15.1",
     "eslint": "^4.16.0"
-  },
-  "scripts": {
-    "build": "babel index.js --out-dir dist",
-    "start": "node dist/index"
   },
   "author": "Jonathan Taylor",
   "license": "MIT",
