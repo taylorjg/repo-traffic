@@ -2,8 +2,8 @@ import axios from "axios";
 import program from "commander";
 
 program
-  .option("-t, --token <token>", "GitHub API token")
-  .option("-u, --username <username>", "User whose repos should be displayed", "taylorjg")
+  .option("-t, --token <token>", "GitHub personal access token")
+  .option("-u, --username <username>", "User whose repos should be displayed")
   .option("-p, --page-size <n>", "Page size", Number, 100)
   .option("-r, --show-rate-limit", "Show remaining rate limit")
   .parse(process.argv);
