@@ -5,6 +5,7 @@ program
   .option("-t, --token <token>", "GitHub API token")
   .option("-u, --username <username>", "User whose repos should be displayed", "taylorjg")
   .option("-p, --page-size <n>", "Page size", Number, 100)
+  .option("-r, --show-rate-limit", "Show remaining rate limit")
   .parse(process.argv);
 
 axios.defaults.baseURL = "https://api.github.com";
@@ -72,11 +73,17 @@ const handleError = err => {
   }
 };
 
-const flatten = xs => [].concat(...xs);
+const flatten = arrs =>
+  [].concat(...arrs);
+
+const sumBy = (xs, f) =>
+  xs.reduce((acc, x) => acc + f(x), 0);
 
 const asyncWrapper = async () => {
   try {
-    await displayRateLimitData();
+    if (program.showRateLimit) {
+      await displayRateLimitData();
+    }
 
     const url = `/users/${program.username}/repos`;
     const config = {
@@ -118,9 +125,12 @@ const asyncWrapper = async () => {
     process.stdout.write("\n");
 
     const compareResults = (a, b) => {
+      const compareViewsUniques = b.views.uniques - a.views.uniques;
       const compareViewsCount = b.views.count - a.views.count;
+      const compareClonesUniques = b.clones.uniques - a.clones.uniques;
       const compareClonesCount = b.clones.count - a.clones.count;
-      return compareViewsCount ? compareViewsCount : compareClonesCount;
+      const compareStarsCount = b.repo.stargazers_count - a.repo.stargazers_count
+      return compareViewsUniques ? compareViewsUniques : compareViewsCount;
     };
 
     const filteredSortedResults = results
@@ -142,7 +152,18 @@ const asyncWrapper = async () => {
       console.log(`${repoName}     ${viewsNumbers}     ${clonesNumbers}     ${stars}`);
     });
 
-    await displayRateLimitData();
+    console.log();
+    console.log(`Total views: ${sumBy(filteredSortedResults, r => r.views.count)}`);
+    console.log(`Total unique views: ${sumBy(filteredSortedResults, r => r.views.uniques)}`);
+    console.log(`Total clones: ${sumBy(filteredSortedResults, r => r.clones.count)}`);
+    console.log(`Total unique clones: ${sumBy(filteredSortedResults, r => r.clones.uniques)}`);
+    console.log(`Total stars (filtered): ${sumBy(filteredSortedResults, r => r.repo.stargazers_count)}`);
+    console.log(`Total stars (unfiltered): ${sumBy(results, r => r.repo.stargazers_count)}`);
+    console.log();
+
+    if (program.showRateLimit) {
+      await displayRateLimitData();
+    }
   }
   catch (err) {
     handleError(err);
