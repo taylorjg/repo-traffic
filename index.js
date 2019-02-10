@@ -6,6 +6,7 @@ program
   .option("-u, --username <username>", "User whose repos should be displayed")
   .option("-p, --page-size <n>", "Page size", Number, 100)
   .option("-r, --show-rate-limit", "Show remaining rate limit")
+  .option("-z, --show-zero-views", "Show repos with zero views")
   .parse(process.argv);
 
 axios.defaults.baseURL = "https://api.github.com";
@@ -125,16 +126,22 @@ const asyncWrapper = async () => {
     process.stdout.write("\n");
 
     const compareResults = (a, b) => {
-      const compareViewsUniques = b.views.uniques - a.views.uniques;
-      const compareViewsCount = b.views.count - a.views.count;
-      const compareClonesUniques = b.clones.uniques - a.clones.uniques;
-      const compareClonesCount = b.clones.count - a.clones.count;
-      const compareStarsCount = b.repo.stargazers_count - a.repo.stargazers_count
-      return compareViewsUniques ? compareViewsUniques : compareViewsCount;
+      const uniqueViewsComparison = b.views.uniques - a.views.uniques;
+      const totalViewsComparison = b.views.count - a.views.count;
+      const uniqueClonesComparison = b.clones.uniques - a.clones.uniques;
+      const totalClonesComparison = b.clones.count - a.clones.count;
+      const totalStarsComparison = b.repo.stargazers_count - a.repo.stargazers_count;
+      return (
+        uniqueViewsComparison ||
+        totalViewsComparison ||
+        uniqueClonesComparison ||
+        totalClonesComparison ||
+        totalStarsComparison
+      );
     };
 
     const filteredSortedResults = results
-      .filter(result => result.views.count || result.clones.count)
+      .filter(result => result.views.count || (result.clones.count && program.showZeroViews))
       .sort(compareResults);
 
     const REPO_NAME_COL_WIDTH = 40;
