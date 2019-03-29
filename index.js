@@ -5,7 +5,8 @@ program
   .option("-t, --token <token>", "GitHub personal access token")
   .option("-u, --username <username>", "User whose repos should be displayed")
   .option("-p, --page-size <n>", "Page size", Number, 100)
-  .option("-r, --show-rate-limit", "Show remaining rate limit")
+  .option("-s, --show-rate-limit", "Show remaining rate limit")
+  .option("-r, --repo <repo>", "Show traffic for one repo only")
   .option("-z, --show-zero-views", "Show repos with zero views")
   .parse(process.argv);
 
@@ -82,6 +83,19 @@ const sumBy = (xs, f) =>
 
 const asyncWrapper = async () => {
   try {
+    if (program.repo) {
+      const { data: repo } = await axios.get(`/repos/${program.username}/${program.repo}`);
+      const viewsPromise = axios.get(`/repos/${program.username}/${program.repo}/traffic/views`);
+      const clonesPromise = axios.get(`/repos/${program.username}/${program.repo}/traffic/clones`);
+      const [{ data: views }, { data: clones }] = await Promise.all([viewsPromise, clonesPromise]);
+      console.log(`Total views: ${views.count}`);
+      console.log(`Total unique views: ${views.uniques}`);
+      console.log(`Total clones: ${clones.count}`);
+      console.log(`Total unique clones: ${clones.uniques}`);
+      console.log(`Total stars: ${repo.stargazers_count}`);
+      return;
+    }
+
     if (program.showRateLimit) {
       await displayRateLimitData();
     }
