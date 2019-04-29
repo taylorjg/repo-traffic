@@ -7,7 +7,7 @@ program
   .option("-p, --page-size <n>", "Page size", Number, 100)
   .option("-s, --show-rate-limit", "Show remaining rate limit")
   .option("-r, --repo <repo>", "Show traffic for one repo only")
-  .option("-z, --show-zero-views", "Show repos with zero views")
+  .option("-a, --all", "Show traffic for all repos")
   .parse(process.argv);
 
 axios.defaults.baseURL = "https://api.github.com";
@@ -155,7 +155,7 @@ const asyncWrapper = async () => {
     };
 
     const filteredSortedResults = results
-      .filter(result => result.views.count || (result.clones.count && program.showZeroViews))
+      .filter(result => result.views.count > 1 || program.all)
       .sort(compareResults);
 
     const REPO_NAME_COL_WIDTH = 40;
