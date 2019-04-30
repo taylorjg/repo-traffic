@@ -155,7 +155,7 @@ const asyncWrapper = async () => {
     };
 
     const filteredSortedResults = results
-      .filter(result => result.views.count > 1 || program.all)
+      .filter(result => result.views.uniques > 1 || program.all)
       .sort(compareResults);
 
     const REPO_NAME_COL_WIDTH = 40;
