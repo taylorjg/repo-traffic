@@ -3,9 +3,9 @@
   "version": "0.0.1",
   "description": "Fetch and display GitHub repo traffic data using the GitHub REST API v3",
   "dependencies": {
-    "axios": "^0.17.1",
-    "commander": "^2.15.1",
-    "eslint": "^4.16.0"
+    "axios": "^0.19.0",
+    "commander": "^2.20.0",
+    "eslint": "^5.16.0"
   },
   "author": "Jonathan Taylor",
   "license": "MIT",
