@@ -93,6 +93,7 @@ const asyncWrapper = async () => {
       console.log(`Total clones: ${clones.count}`);
       console.log(`Total unique clones: ${clones.uniques}`);
       console.log(`Total stars: ${repo.stargazers_count}`);
+      console.log(`Total forks: ${repo.forks_count}`);
       return;
     }
 
@@ -161,16 +162,19 @@ const asyncWrapper = async () => {
     const REPO_NAME_COL_WIDTH = 40;
     const COUNT_COL_WIDTH = 5;
 
+    const padCount = n => String(n).padStart(COUNT_COL_WIDTH);
+
     filteredSortedResults.forEach(result => {
       const repoName = result.repo.name.padEnd(REPO_NAME_COL_WIDTH);
-      const viewsCount = String(result.views.count).padStart(COUNT_COL_WIDTH);
-      const viewsUniques = String(result.views.uniques).padStart(COUNT_COL_WIDTH);
-      const clonesCount = String(result.clones.count).padStart(COUNT_COL_WIDTH);
-      const clonesUniques = String(result.clones.uniques).padStart(COUNT_COL_WIDTH);
+      const viewsCount = padCount(result.views.count);
+      const viewsUniques = padCount(result.views.uniques);
+      const clonesCount = padCount(result.clones.count);
+      const clonesUniques = padCount(result.clones.uniques);
       const viewsNumbers = `views: ${viewsCount} / ${viewsUniques}`;
       const clonesNumbers = `clones: ${clonesCount} / ${clonesUniques}`;
-      const stars = `stars: ${result.repo.stargazers_count}`;
-      console.log(`${repoName}     ${viewsNumbers}     ${clonesNumbers}     ${stars}`);
+      const stars = `stars: ${padCount(result.repo.stargazers_count)}`;
+      const forks = `forks: ${padCount(result.repo.forks_count)}`;
+      console.log(`${repoName}     ${viewsNumbers}     ${clonesNumbers}     ${stars}     ${forks}`);
     });
 
     console.log();
@@ -179,6 +183,7 @@ const asyncWrapper = async () => {
     console.log(`Total clones: ${sumBy(filteredSortedResults, r => r.clones.count)}`);
     console.log(`Total unique clones: ${sumBy(filteredSortedResults, r => r.clones.uniques)}`);
     console.log(`Total stars: ${sumBy(results, r => r.repo.stargazers_count)}`);
+    console.log(`Total forks: ${sumBy(results, r => r.repo.forks_count)}`);
     console.log();
 
     if (program.showRateLimit) {
